@@ -1,0 +1,7 @@
+ImageRecieveLambdaRole	arn:aws:iam::745113016804:role/LambdaImageRecieveRole	-
+InstanceProfileName	ec2InstanceRole	-
+InstanceType	t1.micro	-
+KeyName	sid-cali	-
+SSHLocation	0.0.0.0/0	-
+Subnets	subnet-b4870ad1,subnet-b870b3e1	-
+VpcId	vpc-a6fc5dc3

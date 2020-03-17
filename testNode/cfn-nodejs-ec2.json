@@ -5,6 +5,13 @@
 
   "Parameters" : {
 
+    "ImageRecieveLambdaRole" : {
+      "Description" : "Add a Lambda Execution Role Arn",
+      "Type" : "String",
+      "Default" : ""
+
+    },
+
     "VpcId" : {
       "Type" : "AWS::EC2::VPC::Id",
       "Description" : "VpcId of your existing Virtual Private Cloud (VPC)",
@@ -210,6 +217,77 @@
 
   "Resources" : {
 
+    "S3Bucket" : {
+        "Type" : "AWS::S3::Bucket",
+
+        "Properties" : {
+           "BucketName" : "image-input-bucket-2",
+           "NotificationConfiguration": {
+
+             "LambdaConfigurations": [
+                        {
+                            "Event": "s3:ObjectCreated:*",
+                            "Function": {
+                                "Fn::GetAtt": [
+                                    "ImageRecieveFunction",
+                                    "Arn"
+                                ]
+                            }
+                          } ]
+
+},
+           "PublicAccessBlockConfiguration" :
+           {
+            "BlockPublicAcls" : "TRUE",
+            "BlockPublicPolicy" : "TRUE",
+            "IgnorePublicAcls" : "TRUE",
+            "RestrictPublicBuckets" : "TRUE"
+}
+
+
+     }
+     },
+
+     "S3PermissionLambda" : {
+
+       "Type": "AWS::Lambda::Permission",
+       "Properties": {
+        "FunctionName": {
+          "Ref" : "ImageRecieveFunction"
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "s3.amazonaws.com",
+        "SourceAccount": {
+            "Ref": "AWS::AccountId"
+        },
+        "SourceArn": {
+          "Fn::GetAtt": [
+              "S3Bucket",
+              "Arn"
+          ]
+        }
+    }
+  },
+
+     "ImageRecieveFunction": {
+     "Type": "AWS::Lambda::Function",
+     "Properties": {
+         "Handler": "index.handler",
+         "Role": { "Ref" : "ImageRecieveLambdaRole"
+         },
+         "Code": {
+             "S3Bucket": "testfuncbucket",
+             "S3Key": "function.zip"
+         },
+         "Runtime": "nodejs12.x",
+         "Timeout": 25,
+         "TracingConfig": {
+             "Mode": "Active"
+         }
+     }
+   },
+
+
     "WebServerGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
@@ -243,7 +321,8 @@
           "config" : {
             "packages" : {
               "yum" : {
-                "httpd" : []
+                "httpd" : [],
+                "nodejs" : []
               }
             },
 
@@ -300,7 +379,7 @@
             },
             "commands" : {
               "InstallNode" : {
-                "command" : "yum install nodejs -y",
+                "command" : "echo hello",
                 "cwd" : "/home/ec2-user/",
                 "ignoreErrors" : "false"
               }
